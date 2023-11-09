@@ -1,0 +1,43 @@
+{
+  "name": "challenge-4-todo-yigit-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest --config ./vitest/vitest.config.ts",
+    "start": "tsc && node ./dist/index.js",
+    "nodemon": "nodemon ./index.ts"
+  },
+  "keywords": [],
+  "author": "Yigitcan Ustek <yigitcan.ustek@lotec.com.tr>",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.436.0",
+    "@aws-sdk/client-s3": "^3.438.0",
+    "@aws-sdk/s3-request-presigner": "^3.438.0",
+    "@aws-sdk/types": "^3.433.0",
+    "@aws-sdk/util-dynamodb": "^3.436.0",
+    "@types/cors": "^2.8.15",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "dompurify": "^3.0.6",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsdom": "^22.1.0",
+    "morgan": "^1.10.0",
+    "ulid": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/dompurify": "^3.0.4",
+    "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.20",
+    "@types/jsdom": "^21.1.4",
+    "@types/morgan": "^1.9.7",
+    "@types/node": "^20.8.9",
+    "@types/supertest": "^2.0.15",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2",
+    "vitest": "^0.34.6"
+  }
+}
