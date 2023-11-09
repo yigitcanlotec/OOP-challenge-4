@@ -1,9 +1,10 @@
 // config.ts
-export const dbConfig = {
-  user: process.env.DB_USER || 'defaultUser',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'myDatabase',
-  password: process.env.DB_PASSWORD || 'defaultPassword',
-  port: parseInt(process.env.DB_PORT!, 10) || 5432,
-  // Add more environment-specific configuration options here
-};
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+
+export const dbConfig = new DynamoDBClient({
+  region: process.env.REGION,
+  credentials: {
+    accessKeyId: process.env.ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.SECRET_ACCESS_KEY || '',
+  },
+});

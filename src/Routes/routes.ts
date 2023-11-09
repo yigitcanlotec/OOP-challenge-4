@@ -8,28 +8,6 @@ import {
   getUserInfo,
 } from '../utils/utils';
 
-import {
-  DynamoDBClient,
-  QueryCommand,
-  QueryCommandOutput,
-  DeleteItemCommand,
-  AttributeValue,
-  PutItemCommand,
-  UpdateItemCommand,
-  UpdateItemCommandOutput,
-  ReturnValue,
-  PutItemCommandOutput,
-} from '@aws-sdk/client-dynamodb';
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  ListObjectsV2Command,
-  DeleteObjectCommand,
-  ListObjectsV2CommandOutput,
-  DeleteObjectCommandInput,
-  ListObjectsV2CommandInput,
-} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import morgan from 'morgan';
 import { marshall } from '@aws-sdk/util-dynamodb';
@@ -42,13 +20,6 @@ const DOMPurify = createDOMPurify(window);
 
 // Globals.
 const logger = morgan('combined');
-const dbClient = new DynamoDBClient({
-  region: process.env.REGION,
-  credentials: {
-    accessKeyId: process.env.ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.SECRET_ACCESS_KEY || '',
-  },
-});
 
 async function isAuthenticated(
   req: Request,
@@ -183,16 +154,6 @@ async function register(req: Request, res: Response) {
 
   //Put item from DynamoDb.
   try {
-    const result = await dbClient.send(
-      new PutItemCommand({
-        TableName: process.env.USER_TABLE_NAME,
-        Item: {
-          username: { S: req.body.username },
-          password: { S: req.body.password },
-        },
-        ConditionExpression: 'attribute_not_exists(username)',
-      })
-    );
     // console.log(result.$metadata.httpStatusCode);
     if (result.$metadata.httpStatusCode === 200) {
       //If successful;
