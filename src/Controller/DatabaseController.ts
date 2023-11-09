@@ -50,6 +50,4 @@ export class DatabaseController {
     const query = 'DELETE FROM users WHERE id = $1';
     await this.pool.query(query, [id]);
   }
-
-  // Additional methods to interact with the database can be added here...
 }
