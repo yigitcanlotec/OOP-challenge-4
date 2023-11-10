@@ -1,5 +1,23 @@
-import { Pool } from 'pg';
 import { dbConfig } from '../config';
+
+import {
+  DynamoDBClient,
+  DeleteItemCommand,
+  GetItemCommand,
+  UpdateItemCommand,
+  PutItemCommand,
+  PutItemCommandOutput,
+} from '@aws-sdk/client-dynamodb';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
+  DeleteObjectCommand,
+  ListObjectsV2CommandOutput,
+  DeleteObjectCommandInput,
+  ListObjectsV2CommandInput,
+} from '@aws-sdk/client-s3';
 
 interface DatabaseConfig {
   user: string;
@@ -10,44 +28,83 @@ interface DatabaseConfig {
 }
 
 export class DatabaseController {
-  private pool: Pool;
+  private dynamoDBClient: DynamoDBClient;
 
   constructor() {
-    this.pool = new Pool(dbConfig);
+    this.dynamoDBClient = new DynamoDBClient(dbConfig);
   }
 
-  // Connect to the PostgreSQL database
-  async connect(): Promise<void> {
-    await this.pool.connect();
-  }
-
-  // Create a new user in the database
   async createUser(
     username: string,
-    email: string,
-    password: string
-  ): Promise<void> {
-    const query =
-      'INSERT INTO users(username, email, password) VALUES($1, $2, $3)';
-    await this.pool.query(query, [username, email, password]);
+    password: string,
+    tableName: string,
+    email?: string,
+    indexName?: string
+  ): Promise<any> {
+    const input = {
+      TableName: tableName,
+      Item: {
+        username: { S: username },
+        password: { S: password },
+      },
+      ConditionExpression: 'attribute_not_exists(username)',
+    };
+
+    const command = new PutItemCommand(input);
+    const result = await this.dynamoDBClient.send(command);
+
+    if (result.$metadata.httpStatusCode === 200) return true;
+    return false;
   }
 
-  // Retrieve a user by id from the database
-  async getUser(id: number): Promise<any> {
-    const query = 'SELECT * FROM users WHERE id = $1';
-    const result = await this.pool.query(query, [id]);
-    return result.rows[0];
+  async getUser(
+    id: string,
+    tableName: string,
+    indexName?: string
+  ): Promise<any> {
+    const input = {
+      TableName: tableName,
+      Key: {
+        username: { S: id },
+      },
+    };
+
+    const result = await this.dynamoDBClient.send(new GetItemCommand(input));
+    if (result.$metadata.httpStatusCode === 200) return result.Item!;
+    return [];
   }
 
-  // Update a user's information in the database
-  async updateUser(id: number, username: string, email: string): Promise<void> {
-    const query = 'UPDATE users SET username = $1, email = $2 WHERE id = $3';
-    await this.pool.query(query, [username, email, id]);
+  async updateUser(
+    id: string,
+    tableName: string,
+    params: string
+  ): Promise<any> {
+    const input = {
+      TableName: tableName,
+      Key: {
+        username: { S: id },
+      },
+      UpdateExpression: `set ${params} = :setParams`,
+      ExpressionAttributeValues: {
+        ':setParams': { S: params },
+      },
+    };
+    const command = new UpdateItemCommand(input);
+    const result = await this.dynamoDBClient.send(command);
+    if (result.$metadata.httpStatusCode === 200) return true;
+    return false;
   }
 
-  // Delete a user from the database
-  async deleteUser(id: number): Promise<void> {
-    const query = 'DELETE FROM users WHERE id = $1';
-    await this.pool.query(query, [id]);
+  async deleteUser(id: string, tableName: string): Promise<any> {
+    const input = {
+      TableName: tableName,
+      Key: {
+        username: { S: id },
+      },
+    };
+    const command = new DeleteItemCommand(input);
+    const result = await this.dynamoDBClient.send(command);
+    if (result.$metadata.httpStatusCode === 200) return true;
+    return false;
   }
 }
