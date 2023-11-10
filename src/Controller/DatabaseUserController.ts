@@ -1,4 +1,4 @@
-import { dbConfig } from '../config';
+import { dynamoDBConfig } from '../config';
 
 import {
   DynamoDBClient,
@@ -6,18 +6,7 @@ import {
   GetItemCommand,
   UpdateItemCommand,
   PutItemCommand,
-  PutItemCommandOutput,
 } from '@aws-sdk/client-dynamodb';
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  ListObjectsV2Command,
-  DeleteObjectCommand,
-  ListObjectsV2CommandOutput,
-  DeleteObjectCommandInput,
-  ListObjectsV2CommandInput,
-} from '@aws-sdk/client-s3';
 
 interface DatabaseConfig {
   user: string;
@@ -27,22 +16,23 @@ interface DatabaseConfig {
   port: number;
 }
 
-export class DatabaseController {
+export class DatabaseUserController {
   private dynamoDBClient: DynamoDBClient;
+  private tableName: string;
 
-  constructor() {
-    this.dynamoDBClient = new DynamoDBClient(dbConfig);
+  constructor(tableName: string) {
+    this.dynamoDBClient = new DynamoDBClient(dynamoDBConfig);
+    this.tableName = tableName;
   }
 
   async createUser(
     username: string,
     password: string,
-    tableName: string,
     email?: string,
     indexName?: string
   ): Promise<any> {
-    const input = {
-      TableName: tableName,
+    const dynamoDBInput = {
+      TableName: this.tableName,
       Item: {
         username: { S: username },
         password: { S: password },
@@ -50,37 +40,32 @@ export class DatabaseController {
       ConditionExpression: 'attribute_not_exists(username)',
     };
 
-    const command = new PutItemCommand(input);
-    const result = await this.dynamoDBClient.send(command);
+    const dynamoDBCommand = new PutItemCommand(dynamoDBInput);
+    const dynamoDBResult = await this.dynamoDBClient.send(dynamoDBCommand);
 
-    if (result.$metadata.httpStatusCode === 200) return true;
+    if (dynamoDBResult.$metadata.httpStatusCode === 200) return true;
     return false;
   }
 
-  async getUser(
-    id: string,
-    tableName: string,
-    indexName?: string
-  ): Promise<any> {
-    const input = {
-      TableName: tableName,
+  async getUser(id: string, indexName?: string): Promise<any> {
+    const dynamoDBInput = {
+      TableName: this.tableName,
       Key: {
         username: { S: id },
       },
     };
 
-    const result = await this.dynamoDBClient.send(new GetItemCommand(input));
-    if (result.$metadata.httpStatusCode === 200) return result.Item!;
+    const dynamoDBResult = await this.dynamoDBClient.send(
+      new GetItemCommand(dynamoDBInput)
+    );
+    if (dynamoDBResult.$metadata.httpStatusCode === 200)
+      return dynamoDBResult.Item!;
     return [];
   }
 
-  async updateUser(
-    id: string,
-    tableName: string,
-    params: string
-  ): Promise<any> {
-    const input = {
-      TableName: tableName,
+  async updateUser(id: string, params: string): Promise<any> {
+    const dynamoDBInput = {
+      TableName: this.tableName,
       Key: {
         username: { S: id },
       },
@@ -89,22 +74,22 @@ export class DatabaseController {
         ':setParams': { S: params },
       },
     };
-    const command = new UpdateItemCommand(input);
-    const result = await this.dynamoDBClient.send(command);
-    if (result.$metadata.httpStatusCode === 200) return true;
+    const dynamoDBCommand = new UpdateItemCommand(dynamoDBInput);
+    const dynamoDBResult = await this.dynamoDBClient.send(dynamoDBCommand);
+    if (dynamoDBResult.$metadata.httpStatusCode === 200) return true;
     return false;
   }
 
-  async deleteUser(id: string, tableName: string): Promise<any> {
-    const input = {
-      TableName: tableName,
+  async deleteUser(id: string): Promise<any> {
+    const dynamoDBInput = {
+      TableName: this.tableName,
       Key: {
         username: { S: id },
       },
     };
-    const command = new DeleteItemCommand(input);
-    const result = await this.dynamoDBClient.send(command);
-    if (result.$metadata.httpStatusCode === 200) return true;
+    const dynamoDBCommand = new DeleteItemCommand(dynamoDBInput);
+    const dynamoDBResult = await this.dynamoDBClient.send(dynamoDBCommand);
+    if (dynamoDBResult.$metadata.httpStatusCode === 200) return true;
     return false;
   }
 }
